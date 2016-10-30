@@ -16,9 +16,76 @@ var PLAYERS = [
   },
 ];
 
+var nextId = 4;
+
+var AddPlayerForm = React.createClass({
+  propTypes: {
+    onAdd: React.PropTypes.func.isRequired,
+  },
+
+  getInitialState: function() {
+      return {
+        name: '',
+      }
+  },
+
+  onNameChange: function(e) {
+    console.log('onNameChange', e.target.value);
+    this.setState({
+      name: e.target.value,
+    });
+  },
+
+  onSubmit: function (e) {
+    e.preventDefault();
+
+    this.props.onAdd(this.state.name);
+    this.setState({
+      name: '',
+    })
+  },
+  render: function() {
+    return (
+      <div className="add-player-form">
+        <form onSubmit={this.onSubmit} onChange={this.onNameChange}>
+          <input type="text" value={this.state.name} />
+          <input type="submit" value="Add Player" />
+        </form>
+      </div>
+    )
+  }
+});
+
+function Stats(props) {
+  var totalPlayers = props.players.length;
+  var totalPoints = props.players.reduce(function(total, player) {
+    return total + player.score;
+  }, 0);
+
+  return (
+    <table className="stats">
+      <tbody>
+        <tr>
+          <td>Players:</td>
+          <td>{totalPlayers}</td>
+        </tr>
+        <tr>
+          <td>Total Points:</td>
+          <td>{totalPoints}</td>
+        </tr>
+      </tbody>
+    </table>
+  )
+}
+
+Stats.propTypes = {
+  players: React.PropTypes.array.isRequired,
+}
+
 function Header(props) {
   return (
     <div className="header">
+      <Stats players={props.players}/>
       <h1>{props.title}</h1>
     </div>
   );
@@ -26,6 +93,7 @@ function Header(props) {
 
 Header.propTypes = {
   title: React.PropTypes.string.isRequired,
+  players: React.PropTypes.array.isRequired,
 };
 
 function Counter(props) {
@@ -90,10 +158,21 @@ var Application = React.createClass({
     this.setState(this.state);
   },
 
+  onPlayerAdd: function(name) {
+    console.log('Player added', name);
+    this.state.players.push({
+      name: name,
+      score: 0,
+      id: nextId,
+    });
+    this.setState(this.state);
+    nextId += 1;
+  },
+
   render: function() {
     return (
       <div className="scoreboard">
-        <Header title={this.props.title} />
+        <Header title={this.props.title} players={this.state.players} />
         <div className="players">
         {this.state.players.map(function(player, index) {
           return (
@@ -105,6 +184,7 @@ var Application = React.createClass({
           )
         }.bind(this))}
         </div>
+        <AddPlayerForm onAdd={this.onPlayerAdd} />
       </div>
     );
   }
